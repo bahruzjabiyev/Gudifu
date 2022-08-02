@@ -2,7 +2,7 @@ sed -i 's/main(/fuzz_without_main(/g' src/core/nginx.c
 
 mkdir -p $NGX_OBJS/src/fuzz
 
-ngx_all_objs_fuzz=`echo src/fuzz/wrappers.c $ngx_all_srcs \
+ngx_all_objs_fuzz=`echo $ngx_all_srcs \
     | sed -e "s#\([^ ]*\.\)cc#$NGX_OBJS\/\1$ngx_objext#g" \
           -e "s#\([^ ]*\.\)c#$NGX_OBJS\/\1$ngx_objext#g"`
 
@@ -10,16 +10,13 @@ ngx_deps_fuzz=`echo $ngx_all_objs_fuzz $ngx_modules_obj $ngx_res $LINK_DEPS \
     | sed -e "s/  *\([^ ][^ ]*\)/$ngx_regex_cont\1/g" \
           -e "s/\//$ngx_regex_dirsep/g"`
 
-ngx_objs=`echo objs/src/fuzz/wrappers.o $ngx_all_objs $ngx_modules_obj \
+ngx_objs=`echo $ngx_all_objs $ngx_modules_obj \
     | sed -e "s/  *\([^ ][^ ]*\)/$ngx_long_regex_cont\1/g" \
           -e "s/\//$ngx_regex_dirsep/g"`
 
 cat << END                                                    >> $NGX_MAKEFILE
 
 fuzzers: objs/http_request_fuzzer
-
-objs/src/fuzz/wrappers.o:
-	\$(CC) $ngx_compile_opt \$(CFLAGS) -o objs/src/fuzz/wrappers.o src/fuzz/wrappers.c
 
 objs/http_request_fuzzer: $ngx_deps_fuzz
 	 \$(CXX) \$(CXXFLAGS) -DNDEBUG src/fuzz/http_request_fuzzer.cc \
