@@ -14,6 +14,15 @@
 # limitations under the License.
 #
 ################################################################################
+cat << END > /tmp/setflags.sh
+
+export CFLAGS="-O1 -fno-omit-frame-pointer -gline-tables-only -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION -fsanitize=fuzzer-no-link"
+export CXXFLAGS="-O1 -fno-omit-frame-pointer -gline-tables-only -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION -fsanitize=fuzzer-no-link -stdlib=libc++"
+
+END
+
+source /tmp/setflags.sh
+
 hg import $SRC/add_fuzzers.diff --no-commit
 
 cp -r $SRC/fuzz src/

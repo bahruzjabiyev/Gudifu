@@ -25,3 +25,4 @@ RUN (mkdir LPM && cd LPM && cmake ../libprotobuf-mutator -GNinja -DLIB_PROTO_MUT
 WORKDIR nginx
 COPY fuzz $SRC/fuzz
 COPY build.sh add_fuzzers.diff make_fuzzers  $SRC/
+RUN /usr/local/bin/compile_libfuzzer
