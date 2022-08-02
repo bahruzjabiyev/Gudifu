@@ -1,2 +1,2 @@
 # Gudifu
-Guided Differential Fuzzer
+Gudifu (**Gu**ided **Di**fferential **Fu**zzer) is a fuzzing tool.
