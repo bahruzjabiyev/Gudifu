@@ -1,4 +1,5 @@
-sed -i 's/main(/fuzz_without_main(/g' src/core/nginx.c
+sed -i 's/^.*main(/fuzz_without_main(/g' src/core/nginx.c
+if ! (grep -q fuzz_without_main src/core/nginx.h); then echo "int ngx_cdecl fuzz_without_main(int argc, char *const *argv);" >> src/core/nginx.h; fi
 
 mkdir -p $NGX_OBJS/src/fuzz
 
