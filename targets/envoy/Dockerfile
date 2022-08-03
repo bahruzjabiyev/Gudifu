@@ -31,5 +31,10 @@ RUN apt-get update && apt-get -y install  \
 
 RUN git clone https://github.com/envoyproxy/envoy.git
 WORKDIR $SRC/envoy/
+ADD patches $SRC/envoy/patches
+RUN patch $SRC/envoy/test/integration/h1_fuzz.h $SRC/envoy/patches/h1_fuzz_h.diff
+RUN patch $SRC/envoy/test/integration/h1_fuzz.cc $SRC/envoy/patches/h1_fuzz_cc.diff
+RUN patch $SRC/envoy/test/integration/BUILD $SRC/envoy/patches/integration_build.diff
+COPY diff_fuzz/h1_diff_fuzz_test.cc $SRC/envoy/test/integration/
 COPY build.sh $SRC/
 RUN /usr/local/bin/compile_libfuzzer

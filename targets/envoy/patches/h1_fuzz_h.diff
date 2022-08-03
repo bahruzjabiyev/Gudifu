@@ -1,0 +1,11 @@
+--- /tmp/x	2022-08-03 13:31:52.685332027 +0000
++++ test/integration/h1_fuzz.h	2022-08-03 12:43:28.931919751 +0000
+@@ -16,6 +16,8 @@
+ 
+   void initialize() override;
+   void replay(const test::integration::CaptureFuzzTestCase&, bool ignore_response);
++  void replay_diff(const std::string&, const std::string&);
++  bool replace(std::string& str, const std::string& from, const std::string& to);
+   const std::chrono::milliseconds max_wait_ms_{10};
+ 
+ private:
