@@ -15,6 +15,15 @@
 #
 ################################################################################
 
+cat << END > /tmp/setflags.sh
+
+export CFLAGS="-O1 -fno-omit-frame-pointer -gline-tables-only -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION -fsanitize=fuzzer-no-link"
+export CXXFLAGS="-O1 -fno-omit-frame-pointer -gline-tables-only -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION -fsanitize=fuzzer-no-link -stdlib=libc++"
+
+END
+
+source /tmp/setflags.sh
+
 declare -r FUZZ_TARGET_QUERY='
   let all_fuzz_tests = attr(tags, "fuzz_target", "...") in
   $all_fuzz_tests - attr(tags, "no_fuzz", $all_fuzz_tests)
