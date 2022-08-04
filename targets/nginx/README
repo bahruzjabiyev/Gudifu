@@ -6,8 +6,8 @@ docker build -t gudifu/nginx .
 
 Running
 ------------
-1. docker run -ti guidfu/nginx bash
+1. docker run -ti gudifu/nginx bash
 
 inside the docker container:
-1. run "./build.sh"
+1. execute "bash /src/build.sh"
 
