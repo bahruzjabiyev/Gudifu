@@ -17,8 +17,8 @@
 
 cat << END > /tmp/setflags.sh
 
-export CFLAGS="-O1 -fno-omit-frame-pointer -gline-tables-only -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION -fsanitize=fuzzer-no-link"
-export CXXFLAGS="-O1 -fno-omit-frame-pointer -gline-tables-only -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION -fsanitize=fuzzer-no-link -stdlib=libc++"
+export CFLAGS="\$CFLAGS -fsanitize=fuzzer-no-link"
+export CXXFLAGS="\$CXXFLAGS -fsanitize=fuzzer-no-link"
 
 END
 
