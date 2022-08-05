@@ -83,7 +83,7 @@ DEFINE_FUZZER(const uint8_t* input, size_t len) {
   //const std::string request_sha_str = fuzzer::Sha1ToString(Hash);
   const std::string request_sha_str = "abcdef";
   h1_fuzz_integration_test.replayDiff(std::string(reinterpret_cast<const char*>(input),len), request_sha_str);
-  writeToFile(std::string(reinterpret_cast<const char*>(input),len), "/tmp/inputs/envoy_"+request_sha_str);
+  writeToFile(std::string(reinterpret_cast<const char*>(input),len), "/tmp/input_envoy_"+request_sha_str);
 }
 
 } // namespace Envoy
