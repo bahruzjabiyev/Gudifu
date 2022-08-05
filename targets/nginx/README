@@ -1,0 +1,13 @@
+Building
+-----------
+
+1. Build the docker file:
+docker build -t gudifu/nginx .
+
+Running
+------------
+1. docker run -ti gudifu/nginx bash
+
+inside the docker container:
+1. execute "bash /src/build.sh"
+
