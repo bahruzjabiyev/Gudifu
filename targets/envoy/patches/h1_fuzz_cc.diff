@@ -7,7 +7,7 @@
 >     return true;
 > }
 > 
-> void H1FuzzIntegrationTest::replay_diff(const std::string &input, const std::string &request_sha_hash) {
+> void H1FuzzIntegrationTest::replayDiff(const std::string &input, const std::string &request_sha_hash) {
 >   PERSISTENT_FUZZ_VAR bool initialized = [this]() -> bool {
 >     initialize();
 >     return true;

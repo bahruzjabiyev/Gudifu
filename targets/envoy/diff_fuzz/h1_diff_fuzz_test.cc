@@ -5,7 +5,7 @@ namespace Envoy {
 
 void H1FuzzIntegrationTest::initialize() { 
   config_helper_.addConfigModifier([&](envoy::config::bootstrap::v3::Bootstrap& bootstrap) -> void {
-  const std::string filter_chain_yaml = R"EOF(
+    const std::string filter_chain_yaml = R"EOF(
         name: boo
         filters:
         - name: http
@@ -49,30 +49,28 @@ void H1FuzzIntegrationTest::initialize() {
     TestUtility::loadFromYaml(filter_chain_yaml, *filter_chain_template_);
     auto* cluster_template_2 = bootstrap.mutable_static_resources()->add_clusters();
     TestUtility::loadFromYaml(cluster_yaml_echo, *cluster_template_2);
-    bootstrap.mutable_dynamic_resources()->Clear();    
+    bootstrap.mutable_dynamic_resources()->Clear();
   });
 
   BaseIntegrationTest::use_lds_ = false;
   HttpIntegrationTest::initialize();
-
 }
 
-bool FileExists(const std::string& name) {
-    if (FILE *file = fopen(name.c_str(), "r")) {
-        fclose(file);
-        return true;
-    } else {
-        return false;
-    }   
+bool fileExists(const std::string& name) {
+  if (FILE *file = fopen(name.c_str(), "r")) {
+    fclose(file);
+    return true;
+  } else {
+    return false;
+  }
 }
 
-void WriteToFile(const std::string &Data, const std::string &Path) {
-  if (FileExists(Path)) return;
-  FILE *Out = fopen(Path.c_str(), "wb");
-  if (!Out) return;
-  const uint8_t *data_uint = reinterpret_cast<const uint8_t *>(Data.c_str());
-  fwrite(data_uint, sizeof(data_uint[0]), Data.size(), Out);
-
+void writeToFile(const std::string &data, const std::string &path) {
+  if (fileExists(path)) return;
+  FILE *out = fopen(path.c_str(), "wb");
+  RELEASE_ASSERT(out != nullptr, path + " file cannot be opened");
+  const uint8_t *data_uint = reinterpret_cast<const uint8_t *>(data.c_str());
+  fwrite(data_uint, sizeof(data_uint[0]), data.size(), out);
 }
 
 DEFINE_FUZZER(const uint8_t* input, size_t len) {
@@ -84,8 +82,8 @@ DEFINE_FUZZER(const uint8_t* input, size_t len) {
   //fuzzer::ComputeSHA1(input, len, Hash);
   //const std::string request_sha_str = fuzzer::Sha1ToString(Hash);
   const std::string request_sha_str = "abcdef";
-  h1_fuzz_integration_test.replay_diff(std::string(reinterpret_cast<const char*>(input),len), request_sha_str);
-  WriteToFile(std::string(reinterpret_cast<const char*>(input),len), "/tmp/inputs/envoy_"+request_sha_str);
+  h1_fuzz_integration_test.replayDiff(std::string(reinterpret_cast<const char*>(input),len), request_sha_str);
+  writeToFile(std::string(reinterpret_cast<const char*>(input),len), "/tmp/inputs/envoy_"+request_sha_str);
 }
 
 } // namespace Envoy
