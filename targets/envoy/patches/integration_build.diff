@@ -1,9 +1,0 @@
-1589a1590,1597
->     name = "h1_diff_fuzz_test",
->     srcs = ["h1_diff_fuzz_test.cc"],
->     copts = ["-DPERSISTENT_FUZZER"],
->     corpus = "h1_corpus",
->     deps = [":h1_fuzz_persistent_lib"],
-> )
-> 
-> envoy_cc_fuzz_test(

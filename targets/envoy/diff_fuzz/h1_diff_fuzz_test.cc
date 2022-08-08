@@ -1,4 +1,4 @@
-#include "test/integration/h1_fuzz.h"
+#include "test/integration/diff_fuzz/h1_fuzz.h"
 //#include "third_party/llvm/llvm-project/compiler-rt/lib/fuzzer/FuzzerSHA1.h"
 
 namespace Envoy {
