@@ -33,5 +33,6 @@ envoy_cc_fuzz_test(
     srcs = ["h1_diff_fuzz_test.cc"],
     copts = ["-DPERSISTENT_FUZZER"],
     corpus = "h1_corpus",
+    external_deps = ["ssl"],
     deps = [":h1_fuzz_persistent_lib"],
 )
