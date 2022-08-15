@@ -1,3 +1,4 @@
+//TODO: avoid including a copy, instead include the original one
 #include "test/integration/diff_fuzz/h1_fuzz.h"
 #include "openssl/sha.h"
 
