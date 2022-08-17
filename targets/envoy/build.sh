@@ -15,6 +15,7 @@
 #
 ################################################################################
 
+# These options are added to make sure that the code instrumentation happens.
 cat << END > /tmp/setflags.sh
 
 export CFLAGS="\$CFLAGS -fsanitize=fuzzer-no-link"
