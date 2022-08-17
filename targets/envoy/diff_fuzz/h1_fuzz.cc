@@ -10,6 +10,18 @@
 
 namespace Envoy {
 
+namespace {
+
+bool replace(std::string& str, const std::string& from, const std::string& to) {
+    const size_t start_pos = str.find(from);
+    if(start_pos == std::string::npos)
+        return false;
+    str.replace(start_pos, from.length(), to);
+    return true;
+}
+
+} // namespace
+
 void H1FuzzIntegrationTest::replay(const test::integration::CaptureFuzzTestCase& input,
                                    bool ignore_response) {
   PERSISTENT_FUZZ_VAR bool initialized = [this]() -> bool {
@@ -74,14 +86,6 @@ void H1FuzzIntegrationTest::replay(const test::integration::CaptureFuzzTestCase&
   tcp_client->close();
 }
 
-bool H1FuzzIntegrationTest::replace(std::string& str, const std::string& from, const std::string& to) {
-    size_t start_pos = str.find(from);
-    if(start_pos == std::string::npos)
-        return false;
-    str.replace(start_pos, from.length(), to);
-    return true;
-}
-
 void H1FuzzIntegrationTest::replayDiff(const std::string &input, const std::string &request_sha_hash) {
   PERSISTENT_FUZZ_VAR bool initialized = [this]() -> bool {
     initialize();
@@ -96,7 +100,7 @@ void H1FuzzIntegrationTest::replayDiff(const std::string &input, const std::stri
 
   std::string mutable_input = input;
   // Adding the hash of the request as a header
-  H1FuzzIntegrationTest::replace(mutable_input, "\r\n", "\r\nvia: hash-" + request_sha_hash + "\r\n");
+  replace(mutable_input, "\r\n", "\r\nvia: hash-" + request_sha_hash + "\r\n");
 
   ASSERT_TRUE(tcp_client->write(mutable_input, false));
   if (fake_upstream_connection != nullptr) {

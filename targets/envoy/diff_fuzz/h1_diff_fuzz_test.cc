@@ -1,10 +1,43 @@
 //TODO: avoid including a copy, instead include the original one
 #include "test/integration/diff_fuzz/h1_fuzz.h"
+//TODO: replace openssl dependency with something lighter
 #include "openssl/sha.h"
+#include "test/test_common/utility.h"
 
 namespace Envoy {
 
-void H1FuzzIntegrationTest::initialize() { 
+namespace {
+
+bool fileExists(const std::string& name) {
+  if (FILE *file = fopen(name.c_str(), "r")) {
+    fclose(file);
+    return true;
+  } else {
+    return false;
+  }
+}
+
+void writeToFile(const std::string &data, const std::string &path) {
+  if (fileExists(path)) {
+    return;
+  }
+  FILE *out = fopen(path.c_str(), "wb");
+  RELEASE_ASSERT(out != nullptr, absl::StrCat(path, " file cannot be opened"));
+  const uint8_t *data_uint = reinterpret_cast<const uint8_t *>(data.c_str());
+  fwrite(data_uint, sizeof(data_uint[0]), data.size(), out);
+}
+
+std::string sha1ToString(uint8_t sha1_hash[SHA_DIGEST_LENGTH]) {
+  std::stringstream ss;
+  for (int i = 0; i < SHA_DIGEST_LENGTH; i++)
+    ss << std::hex << std::setfill('0') << std::setw(2) << static_cast<unsigned>(sha1_hash[i]);
+  return ss.str();
+}
+
+} // namespace
+
+
+void H1FuzzIntegrationTest::initialize() {
   config_helper_.addConfigModifier([&](envoy::config::bootstrap::v3::Bootstrap& bootstrap) -> void {
     const std::string filter_chain_yaml = R"EOF(
         name: boo
@@ -55,30 +88,6 @@ void H1FuzzIntegrationTest::initialize() {
 
   BaseIntegrationTest::use_lds_ = false;
   HttpIntegrationTest::initialize();
-}
-
-bool fileExists(const std::string& name) {
-  if (FILE *file = fopen(name.c_str(), "r")) {
-    fclose(file);
-    return true;
-  } else {
-    return false;
-  }
-}
-
-void writeToFile(const std::string &data, const std::string &path) {
-  if (fileExists(path)) return;
-  FILE *out = fopen(path.c_str(), "wb");
-  RELEASE_ASSERT(out != nullptr, path + " file cannot be opened");
-  const uint8_t *data_uint = reinterpret_cast<const uint8_t *>(data.c_str());
-  fwrite(data_uint, sizeof(data_uint[0]), data.size(), out);
-}
-
-std::string sha1ToString(uint8_t sha1_hash[SHA_DIGEST_LENGTH]) {
-  std::stringstream ss;
-  for (int i = 0; i < SHA_DIGEST_LENGTH; i++)
-    ss << std::hex << std::setfill('0') << std::setw(2) << static_cast<unsigned>(sha1_hash[i]);
-  return ss.str();
 }
 
 DEFINE_FUZZER(const uint8_t* input, size_t len) {
