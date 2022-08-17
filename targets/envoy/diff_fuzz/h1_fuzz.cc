@@ -95,9 +95,8 @@ void H1FuzzIntegrationTest::replayDiff(const std::string &input, const std::stri
   }
 
   std::string mutable_input = input;
-  H1FuzzIntegrationTest::replace(mutable_input, "1.1\r\n", "1.1\r\nvia: hash-" + request_sha_hash + "\r\n");
-  H1FuzzIntegrationTest::replace(mutable_input, "ost\r\n", "ost\r\nvia: hash-" + request_sha_hash + "\r\n");
-  H1FuzzIntegrationTest::replace(mutable_input, ": 0\r\n", ": 0\r\nvia: hash-" + request_sha_hash + "\r\n");
+  // Adding the hash of the request as a header
+  H1FuzzIntegrationTest::replace(mutable_input, "\r\n", "\r\nvia: hash-" + request_sha_hash + "\r\n");
 
   ASSERT_TRUE(tcp_client->write(mutable_input, false));
   if (fake_upstream_connection != nullptr) {
