@@ -8,6 +8,7 @@ namespace Envoy {
 
 namespace {
 
+//TODO: use Envoy's filesystem functions
 bool fileExists(const std::string& name) {
   if (FILE *file = fopen(name.c_str(), "r")) {
     fclose(file);
@@ -17,14 +18,16 @@ bool fileExists(const std::string& name) {
   }
 }
 
+//TODO: use Envoy's filesystem functions
 void writeToFile(const std::string &data, const std::string &path) {
   if (fileExists(path)) {
     return;
   }
   FILE *out = fopen(path.c_str(), "wb");
-  RELEASE_ASSERT(out != nullptr, absl::StrCat(path, " file cannot be opened"));
+  RELEASE_ASSERT(out != nullptr, absl::StrCat(path, ": file cannot be opened."));
   const uint8_t *data_uint = reinterpret_cast<const uint8_t *>(data.c_str());
-  fwrite(data_uint, sizeof(data_uint[0]), data.size(), out);
+  const size_t count = fwrite(data_uint, sizeof(data_uint[0]), data.size(), out);
+  RELEASE_ASSERT(count == data.size(), absl::StrCat(path, ": an error prevented the completion of the writing."));
 }
 
 std::string sha1ToString(uint8_t sha1_hash[SHA_DIGEST_LENGTH]) {
@@ -99,7 +102,7 @@ DEFINE_FUZZER(const uint8_t* input, size_t len) {
   SHA1(input, len, request_sha);
   std::string request_sha_str = sha1ToString(request_sha);
   h1_fuzz_integration_test.replayDiff(std::string(reinterpret_cast<const char*>(input),len), request_sha_str);
-  writeToFile(std::string(reinterpret_cast<const char*>(input),len), "/tmp/input_envoy_"+request_sha_str);
+  writeToFile(std::string(reinterpret_cast<const char*>(input),len), "/logs/input_"+request_sha_str);
 }
 
 } // namespace Envoy

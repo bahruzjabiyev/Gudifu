@@ -15,7 +15,6 @@ public:
       : HttpIntegrationTest(Http::CodecType::HTTP1, version) {}
 
   void initialize() override;
-  void replay(const test::integration::CaptureFuzzTestCase&, bool ignore_response);
   void replayDiff(const std::string&, const std::string&);
   const std::chrono::milliseconds max_wait_ms_{10};
 

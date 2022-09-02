@@ -7,84 +7,66 @@
 
 #include "test/integration/http_integration.h"
 #include "test/test_common/environment.h"
+#include "test/test_common/utility.h"
 
 namespace Envoy {
 
 namespace {
 
+//TODO: if there is a replace function of absl which replaces only one
+//occurence, then use that instead
 bool replace(std::string& str, const std::string& from, const std::string& to) {
-    const size_t start_pos = str.find(from);
-    if(start_pos == std::string::npos)
-        return false;
-    str.replace(start_pos, from.length(), to);
-    return true;
+  const size_t start_pos = str.find(from);
+  if(start_pos == std::string::npos)
+    return false;
+  str.replace(start_pos, from.length(), to);
+  return true;
+}
+
+std::string lower(std::string& str) {
+  std::string result_str = str;
+  for(auto& c : result_str) {
+    c = tolower(c);
+  }
+
+  return result_str;
+}
+
+void addHash(std::string& request, const std::string& hash) {
+  std::string request_lower = lower(request);
+  // If request has no body, add hash as a body
+  if (request_lower.find("\r\n\r\n") + 4 == request_lower.length()) {
+    std::string body = absl::StrCat("hash-", hash);
+
+    // Remove existing content-length headers in input, makes no sense anyway
+    // without a body
+    int pos_cl = 0;
+    while(true) {
+      request_lower = lower(request);
+      pos_cl = request_lower.find("content-length");
+      if (pos_cl == -1) break;
+      replace(request, request.substr(pos_cl, 14), "invalid-header");
+    }
+
+    // Remove existing transfer-encoding headers in input, makes no sense anyway
+    // without a body
+    int pos_te = 0;
+    while(true) {
+      request_lower = lower(request);
+      pos_te = request_lower.find("transfer-encoding");
+      if (pos_te == -1) break;
+      replace(request, request.substr(pos_te, 17), "invalid-header");
+    }
+
+    // Add new content-length header with the value of the new body which
+    // contains the hash
+    replace(request, "\r\n\r\n", absl::StrCat("\r\ncontent-length: 45\r\n\r\n", body));
+  } else { // just add in the end of headers block
+    replace(request, "\r\n\r\n", absl::StrCat("\r\nvia: hash-", hash, "\r\n\r\n"));
+  }
 }
 
 } // namespace
-
-void H1FuzzIntegrationTest::replay(const test::integration::CaptureFuzzTestCase& input,
-                                   bool ignore_response) {
-  PERSISTENT_FUZZ_VAR bool initialized = [this]() -> bool {
-    initialize();
-    return true;
-  }();
-  UNREFERENCED_PARAMETER(initialized);
-  IntegrationTcpClientPtr tcp_client = makeTcpConnection(lookupPort("http"));
-  FakeRawConnectionPtr fake_upstream_connection;
-  for (int i = 0; i < input.events().size(); ++i) {
-    const auto& event = input.events(i);
-    ENVOY_LOG_MISC(debug, "Processing event: {}", event.DebugString());
-    // If we're disconnected, we fail out.
-    if (!tcp_client->connected()) {
-      ENVOY_LOG_MISC(debug, "Disconnected, no further event processing.");
-      break;
-    }
-    switch (event.event_selector_case()) {
-    case test::integration::Event::kDownstreamSendBytes:
-      ASSERT_TRUE(tcp_client->write(event.downstream_send_bytes(), false, false));
-      break;
-    case test::integration::Event::kDownstreamRecvBytes:
-      // TODO(htuch): Should we wait for some data?
-      break;
-    case test::integration::Event::kUpstreamSendBytes:
-      if (ignore_response) {
-        break;
-      }
-      if (fake_upstream_connection == nullptr) {
-        if (!fake_upstreams_[0]->waitForRawConnection(fake_upstream_connection, max_wait_ms_)) {
-          // If we timed out, we fail out.
-          tcp_client->close();
-          return;
-        }
-      }
-      // If we're no longer connected, we're done.
-      if (!fake_upstream_connection->connected()) {
-        tcp_client->close();
-        return;
-      }
-      {
-        AssertionResult result = fake_upstream_connection->write(event.upstream_send_bytes());
-        RELEASE_ASSERT(result, result.message());
-      }
-      break;
-    case test::integration::Event::kUpstreamRecvBytes:
-      // TODO(htuch): Should we wait for some data?
-      break;
-    default:
-      // Maybe nothing is set?
-      break;
-    }
-  }
-  if (fake_upstream_connection != nullptr) {
-    if (fake_upstream_connection->connected()) {
-      AssertionResult result = fake_upstream_connection->close();
-      RELEASE_ASSERT(result, result.message());
-    }
-    AssertionResult result = fake_upstream_connection->waitForDisconnect();
-    RELEASE_ASSERT(result, result.message());
-  }
-  tcp_client->close();
-}
 
 void H1FuzzIntegrationTest::replayDiff(const std::string &input, const std::string &request_sha_hash) {
   PERSISTENT_FUZZ_VAR bool initialized = [this]() -> bool {
@@ -100,17 +82,9 @@ void H1FuzzIntegrationTest::replayDiff(const std::string &input, const std::stri
 
   std::string mutable_input = input;
   // Adding the hash of the request as a header
-  replace(mutable_input, "\r\n", "\r\nvia: hash-" + request_sha_hash + "\r\n");
+  addHash(mutable_input, request_sha_hash);
 
-  ASSERT_TRUE(tcp_client->write(mutable_input, false));
-  if (fake_upstream_connection != nullptr) {
-    if (fake_upstream_connection->connected()) {
-      AssertionResult result = fake_upstream_connection->close();
-      RELEASE_ASSERT(result, result.message());
-    }
-    AssertionResult result = fake_upstream_connection->waitForDisconnect();
-    RELEASE_ASSERT(result, result.message());
-  }
+  ASSERT_TRUE(tcp_client->write(mutable_input, false, false));
   tcp_client->close();
 }
 
