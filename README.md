@@ -31,9 +31,9 @@ you will get guided differential fuzzing started. `<target-name>` in the command
 below is a placeholder for the target name.
 
 
-1. `git clone https://github.com/bahruzjabiyev/Gudifu and cd Gudifu/targets/<target-name>`
+1. `git clone https://github.com/bahruzjabiyev/Gudifu and cd Gudifu`
 
-2. `docker build -t gudifu/<target-name> .`
+2. `docker build -t gudifu/<target-name> -f targets/<target-name>.`
 
 3. `docker run -ti -v <your-local-dir>/logs:/logs -v <your-local-dir>/corpus:/corpus gudifu/<target-name> bash`
 
